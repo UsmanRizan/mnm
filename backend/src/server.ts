@@ -3,23 +3,47 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.ts";
 import cors from "cors";
 
+import gemsRouter from "./routes/gems.ts";
+import offersRouter from "./routes/offers.ts";
+import creditsRouter from "./routes/credits.ts";
+
 const app = express();
 const port = 8000;
 
 app.use(
   cors({
-    origin: "http://localhost:8081", // Replace with your frontend's origin
-    methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-  }),
+    origin: [
+      "http://localhost:8081",
+      "http://localhost:8000",
+      "exp://",
+      "myapp://",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
 );
 
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 
-// Mount express json middleware after Better Auth handler
-// or only apply it to routes that don't interact with Better Auth
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-app.listen(port, () => {
-  console.log(`Better Auth app listening on port ${port}`);
+// API Routes
+app.use("/api/gems", gemsRouter);
+app.use("/api/offers", offersRouter);
+app.use("/api/credits", creditsRouter);
+
+// Health check
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
+// Global error handler
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Internal server error" });
+});
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server running on http://localhost:${port}`);
 });

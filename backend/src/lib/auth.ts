@@ -4,6 +4,8 @@ import { db } from "../db/index.ts"; // your drizzle instance
 import { expo } from "@better-auth/expo";
 import "dotenv/config";
 import { schema } from "../db/auth-schema.ts"; // your Drizzle schema with auth tables
+import { creditTransaction } from "../db/gem-schema.ts";
+import { generateId } from "./utils.ts";
 import { phoneNumber } from "better-auth/plugins";
 import axios from "axios";
 
@@ -65,6 +67,19 @@ export const auth = betterAuth({
           );
           // Mutate the user object in-place so the response returns the correct name
           Object.assign(user, updated);
+        }
+
+        // Grant 500 welcome credits to new users
+        try {
+          await db.insert(creditTransaction).values({
+            id: generateId("txn"),
+            userId: user.id,
+            amount: 500,
+            type: "purchase",
+            description: "Welcome bonus — 500 credits",
+          });
+        } catch (err) {
+          console.error("Failed to grant welcome credits:", err);
         }
       },
     }),
