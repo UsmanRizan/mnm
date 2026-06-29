@@ -288,6 +288,29 @@ function UserFooter({
         </Text>
       </TouchableOpacity>
 
+      {/* Profile */}
+      <TouchableOpacity
+        onPress={() => router.push("/profile" as Href)}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          backgroundColor: "rgba(255,255,255,0.06)",
+          paddingVertical: 12,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: "rgba(255,255,255,0.08)",
+          marginBottom: 8,
+        }}
+        activeOpacity={0.7}
+      >
+        <Text style={{ fontSize: 16 }}>👤</Text>
+        <Text style={{ color: Colors.dark.textSecondary, fontWeight: "700", fontSize: 14 }}>
+          Edit Profile
+        </Text>
+      </TouchableOpacity>
+
       <TouchableOpacity
         onPress={handleLogout}
         style={{
@@ -345,42 +368,7 @@ export default function HomeScreen() {
   };
 
   const handleBuyCredits = () => {
-    const presets = [
-      { label: "100 credits — $1.00", value: 100 },
-      { label: "500 credits — $5.00", value: 500 },
-      { label: "1000 credits — $10.00", value: 1000 },
-    ];
-
-    if (Platform.OS === "web") {
-      const amountStr = window.prompt("Enter credit amount to purchase:", "100");
-      if (!amountStr) return;
-      const amount = parseInt(amountStr);
-      if (isNaN(amount) || amount <= 0) {
-        Alert.alert("Error", "Please enter a valid amount");
-        return;
-      }
-      creditsApi.purchase(amount).then(({ balance: newBal }) => {
-        setBalance(newBal);
-        Alert.alert("Success", `Purchased ${amount} credits!`);
-      }).catch((err) => {
-        Alert.alert("Error", err.message);
-      });
-    } else {
-      Alert.alert("Buy Credits", "Choose an amount to purchase", [
-        ...presets.map((p) => ({
-          text: p.label,
-          onPress: () => {
-            creditsApi.purchase(p.value).then(({ balance: newBal }) => {
-              setBalance(newBal);
-              Alert.alert("Success", `Purchased ${p.value} credits!`);
-            }).catch((err) => {
-              Alert.alert("Error", err.message);
-            });
-          },
-        })),
-        { text: "Cancel", style: "cancel" },
-      ]);
-    }
+    router.push("/buy-credits" as Href);
   };
 
   return (

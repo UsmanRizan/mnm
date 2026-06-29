@@ -6,6 +6,8 @@ import cors from "cors";
 import gemsRouter from "./routes/gems.ts";
 import offersRouter from "./routes/offers.ts";
 import creditsRouter from "./routes/credits.ts";
+import payhereRouter from "./routes/payhere.ts";
+import userRouter from "./routes/user.ts";
 
 const app = express();
 const port = 8000;
@@ -32,6 +34,8 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api/gems", gemsRouter);
 app.use("/api/offers", offersRouter);
 app.use("/api/credits", creditsRouter);
+app.use("/api/payhere", payhereRouter);
+app.use("/api/user", userRouter);
 
 // Health check
 app.get("/api/health", (_req, res) => {

@@ -5,9 +5,32 @@ import type {
   CreditTransaction,
   CreateGemInput,
   CreateOfferInput,
+  PayHereCheckout,
+  UserProfile,
 } from "./api-types";
 
 const API_BASE = "http://localhost:8000";
+
+/**
+ * Custom error that carries structured data from the API.
+ */
+export class ApiError extends Error {
+  status: number;
+  body: any;
+
+  constructor(message: string, status: number, body: any) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.body = body;
+
+    // Forward structured fields for convenience
+    if (body?.missingFields) {
+      (this as any).missingFields = body.missingFields;
+      (this as any).currentValues = body.currentValues;
+    }
+  }
+}
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
@@ -39,12 +62,18 @@ async function request<T>(
     credentials: "include",
   });
 
+  const json = await response.json().catch(() => ({}));
+
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Request failed" }));
-    throw new Error(error.error || `HTTP ${response.status}`);
+    const error = new ApiError(
+      json.error || `HTTP ${response.status}`,
+      response.status,
+      json
+    );
+    throw error;
   }
 
-  return response.json();
+  return json as T;
 }
 
 // --- Gems ---
@@ -93,4 +122,27 @@ export const creditsApi = {
 
   getTransactions: () =>
     request<CreditTransaction[]>("GET", "/api/credits/transactions"),
+
+  // --- PayHere Integration ---
+
+  /** Initialize a PayHere checkout session for buying credits. */
+  payhereCheckout: (
+    amount: number,
+    profile?: { address?: string; city?: string; phone?: string }
+  ) =>
+    request<PayHereCheckout>("POST", "/api/payhere/checkout", {
+      amount,
+      ...(profile?.address !== undefined ? { address: profile.address } : {}),
+      ...(profile?.city !== undefined ? { city: profile.city } : {}),
+      ...(profile?.phone !== undefined ? { phone: profile.phone } : {}),
+    }),
+};
+
+// --- User Profile ---
+
+export const userApi = {
+  getProfile: () => request<UserProfile>("GET", "/api/user/profile"),
+
+  updateProfile: (data: { address?: string; city?: string }) =>
+    request<UserProfile>("PUT", "/api/user/profile", data),
 };

@@ -8,6 +8,14 @@ export default function RootLayout() {
       <Stack.Screen name="sign-up" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
+        name="buy-credits"
+        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+      />
+      <Stack.Screen
+        name="profile"
+        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+      />
+      <Stack.Screen
         name="post-gem"
         options={{ presentation: "modal", animation: "slide_from_bottom" }}
       />

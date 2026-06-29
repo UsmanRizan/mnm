@@ -92,3 +92,21 @@ export interface CreateOfferInput {
   amount: number;
   validityMinutes?: number;
 }
+
+export interface PayHereCheckout {
+  orderId: string;
+  checkoutUrl: string;
+  returnUrl: string;
+  cancelUrl: string;
+  amount: number;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string | null;
+  phoneNumberVerified: boolean | null;
+  address: string | null;
+  city: string | null;
+}

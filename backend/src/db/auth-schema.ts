@@ -14,6 +14,8 @@ export const user = pgTable("user", {
     .notNull(),
   phoneNumber: text("phone_number").unique(),
   phoneNumberVerified: boolean("phone_number_verified"),
+  address: text("address"),
+  city: text("city"),
 });
 
 export const session = pgTable(
