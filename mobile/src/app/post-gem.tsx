@@ -13,7 +13,7 @@ import {
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { gemsApi } from "../lib/api-client";
+import { gemsApi, API_BASE } from "../lib/api-client";
 import { Colors, Spacing } from "../constants/theme";
 
 const CATEGORIES = [
@@ -221,6 +221,39 @@ export default function PostGemScreen() {
     }
   };
 
+  /** Upload a local image URI to the server and return the persistent URL. */
+  const uploadImage = async (uri: string): Promise<string> => {
+    const formData = new FormData();
+
+    if (Platform.OS === "web") {
+      // Web: blob URLs must be fetched first before appending to FormData
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      formData.append("image", blob, "image.jpg");
+    } else {
+      // Native: FormData can handle file:// URIs directly
+      formData.append("image", {
+        uri,
+        type: "image/jpeg",
+        name: "image.jpg",
+      } as any);
+    }
+
+    const uploadRes = await fetch(`${API_BASE}/api/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!uploadRes.ok) {
+      const errBody = await uploadRes.json().catch(() => ({}));
+      throw new Error(errBody.error || "Image upload failed");
+    }
+
+    const data = await uploadRes.json();
+    // The returned URL is a path like /uploads/abc123.jpg
+    return `${API_BASE}${data.url}`;
+  };
+
   const handleSubmit = async () => {
     if (!weight || parseFloat(weight) <= 0) {
       Alert.alert("Error", "Please enter a valid weight");
@@ -229,17 +262,18 @@ export default function PostGemScreen() {
 
     setLoading(true);
     try {
-      // Convert images to base64 for the API
+      // Upload images to the server first to get persistent URLs
       let imageUrls: string[] = [];
       if (imageUri) {
-        // In a real app, you'd upload to a storage service
-        // For now, we'll use the local URI
-        imageUrls = [imageUri];
+        const url = await uploadImage(imageUri);
+        imageUrls = [url];
       }
 
-      const certificateData = hasCertificate && certImageUri
-        ? { imageUrl: certImageUri }
-        : undefined;
+      let certificateData: { imageUrl?: string; lab?: string; reportNumber?: string } | undefined;
+      if (hasCertificate && certImageUri) {
+        const certUrl = await uploadImage(certImageUri);
+        certificateData = { imageUrl: certUrl };
+      }
 
       await gemsApi.create({
         weight,

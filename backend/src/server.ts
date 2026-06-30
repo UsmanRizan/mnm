@@ -2,12 +2,15 @@ import express from "express";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.ts";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import gemsRouter from "./routes/gems.ts";
 import offersRouter from "./routes/offers.ts";
 import creditsRouter from "./routes/credits.ts";
 import payhereRouter from "./routes/payhere.ts";
 import userRouter from "./routes/user.ts";
+import uploadRouter from "./routes/upload.ts";
 
 const app = express();
 const port = 8000;
@@ -36,6 +39,11 @@ app.use("/api/offers", offersRouter);
 app.use("/api/credits", creditsRouter);
 app.use("/api/payhere", payhereRouter);
 app.use("/api/user", userRouter);
+app.use("/api/upload", uploadRouter);
+
+// Serve uploaded files as static content
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
 
 // Health check
 app.get("/api/health", (_req, res) => {

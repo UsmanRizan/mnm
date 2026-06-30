@@ -9,7 +9,7 @@ import type {
   UserProfile,
 } from "./api-types";
 
-const API_BASE = "http://localhost:8000";
+export const API_BASE = "http://localhost:8000";
 
 /**
  * Custom error that carries structured data from the API.
